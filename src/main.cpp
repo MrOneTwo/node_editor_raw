@@ -62,6 +62,7 @@ typedef struct Controls
 {
   bool32 lmbState;
   bool32 rmbState;
+  bool32 mmbState;
   uint16 mouseX;
   uint16 mouseY;
   float mouseSensitivity;
@@ -184,8 +185,14 @@ SetGeoForRendering()
   // stbi_image_free(image);
 }
 
+/*
+ * Compute the new camera position in radial coordinates.
+ *
+ * This function computes a position offset vector based on the yaw, pitch, roll.
+ * It sets the position - means that it doesn't take in the account the original position.
+ */
 void
-UpdateViewMatrix(Camera* cam, mat4 view)
+UpdateViewRotation(Camera* cam, mat4 view)
 {
   vec3 trgt = {0.0f, 0.0f, 0.0f};
   vec3 camUpVector = {0.0f, 1.0f, 0.0f};
@@ -312,7 +319,7 @@ main(int argc, char *argv[])
   camera.pitch = 0.0f;
   camera.roll = 0.0f;
   mat4 view = {};
-  UpdateViewMatrix(&camera, view);
+  UpdateViewRotation(&camera, view);
 
   // projection holds the ortho/persp + frustrum
   mat4 projection;
@@ -333,7 +340,7 @@ main(int argc, char *argv[])
   SetGeoForRendering();
   GLuint vertexShader;
   GLuint fragmentShader;
-  CompileShader(VS_texture, FS_texture, &vertexShader, &fragmentShader);
+  CompileShader(VS_texture, FS_default, &vertexShader, &fragmentShader);
   GLuint shaderProgram = SetShader(vertexShader, fragmentShader);
 
   // TODO (mc): fix this... it doesn't work
@@ -460,6 +467,12 @@ main(int argc, char *argv[])
             case SDL_BUTTON_LEFT: {
               controls.lmbState = true;
             } break;
+            case SDL_BUTTON_MIDDLE: {
+              controls.mmbState = true;
+            } break;
+            case SDL_BUTTON_RIGHT: {
+              controls.rmbState = true;
+            } break;
             default: break;
           }
         } break;
@@ -469,6 +482,12 @@ main(int argc, char *argv[])
           {
             case SDL_BUTTON_LEFT: {
               controls.lmbState = false;
+            } break;
+            case SDL_BUTTON_MIDDLE: {
+              controls.mmbState = false;
+            } break;
+            case SDL_BUTTON_RIGHT: {
+              controls.rmbState = false;
             } break;
             default: break;
           }
@@ -491,19 +510,28 @@ main(int argc, char *argv[])
     // Input
     //
 
-    SDL_GetMouseState((int*)&(controls.mouseX),
-                      (int*)&(controls.mouseY));
-    if (controls.lmbState)
     {
-      camera.yaw += controls.mouseSensitivity * (controls.mouseX - controlsPrev.mouseX);
-      camera.pitch += controls.mouseSensitivity * (controls.mouseY - controlsPrev.mouseY);
-      UpdateViewMatrix(&camera, view);
-      GLint viewLoc = GetUniformLoc(shaderProgram, "view");
-      glUniformMatrix4fv(viewLoc, 1, GL_FALSE, (float *)view);
-    };
+      bool32 updateView = false;
+
+      SDL_GetMouseState((int*)&(controls.mouseX),
+                        (int*)&(controls.mouseY));
+
+      if (controls.mmbState)
+      {
+        camera.pos[0] += controls.mouseSensitivity * (controls.mouseX - controlsPrev.mouseX);
+        camera.pos[1] += controls.mouseSensitivity * (controls.mouseY - controlsPrev.mouseY);
+        updateView = true;
+      }
+
+      if (updateView)
+      {
+        glm_translate(view, camera.pos);
+        GLint viewLoc = GetUniformLoc(shaderProgram, "view");
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, (float *)view);
+      }
+    }
 
     controlsPrev = controls;
-
 
     ////////////////////////////////////////
     //
