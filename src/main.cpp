@@ -127,7 +127,7 @@ global_variable GLAtom glAtom = {};
 
 
 void
-SetGeoForRendering()
+GenerateBuffers()
 {
   /*
    * VAO - combines VBOs into one object.
@@ -136,11 +136,6 @@ SetGeoForRendering()
     1,       // vertex array object names count to generate
     &glAtom.vao// array of object names
   );
-  // Make this VAO the active one (remember OpenGL is a state machine).
-  // You can have different VBO and VAO active. This bind has only one argument
-  // because VAO can have only one role - it's more of a wrapper.
-  glBindVertexArray(glAtom.vao);
-
   /*
    * VBO - represents a single attribute. Those aren't usually rendered
    * directly.
@@ -149,15 +144,6 @@ SetGeoForRendering()
     1,               // buffer object names count to generate
     &glAtom.vbo      // array of object names
   );
-
-  // Make this VBO the active one (remember OpenGL is a state machine).
-  // You can have different VBO and VAO active. First argument specifies
-  // the role of this buffer.
-  glBindBuffer(GL_ARRAY_BUFFER, glAtom.vbo);
-  // describe the data in the buffer
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-
   /*
    * EBO
    */
@@ -165,9 +151,6 @@ SetGeoForRendering()
     1,
     &glAtom.ebo
   );
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, glAtom.ebo);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), (GLvoid*)indices, GL_STATIC_DRAW);
-
   /*
    * TEXTURES
    */
@@ -176,12 +159,32 @@ SetGeoForRendering()
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glGenTextures(1, &glAtom.texture);
+}
+
+void
+SetGeoForRendering()
+{
+  // Make this VAO the active one (remember OpenGL is a state machine).
+  // You can have different VBO and VAO active. This bind has only one argument
+  // because VAO can have only one role - it's more of a wrapper.
+  glBindVertexArray(glAtom.vao);
+
+  // Make this VBO the active one (remember OpenGL is a state machine).
+  // You can have different VBO and VAO active. First argument specifies
+  // the role of this buffer.
+  glBindBuffer(GL_ARRAY_BUFFER, glAtom.vbo);
+  // describe the data in the buffer
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, glAtom.ebo);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), (GLvoid*)indices, GL_STATIC_DRAW);
+
   glBindTexture(GL_TEXTURE_2D, glAtom.texture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RED,
                FONT_TEST_IMAGE_WIDTH, FONT_TEST_IMAGE_HEIGHT,
                0, GL_RED, GL_UNSIGNED_BYTE,
                image);
-  glGenerateMipmap(GL_TEXTURE_2D);
+  // glGenerateMipmap(GL_TEXTURE_2D);
   // stbi_image_free(image);
 }
 
@@ -346,6 +349,7 @@ main(int argc, char *argv[])
 #endif
 
 
+  GenerateBuffers();
   SetGeoForRendering();
   // Create shader objects.
   GLuint SO_VS;
@@ -354,30 +358,25 @@ main(int argc, char *argv[])
   GLuint shaderProgram = LinkShaderObjects(SO_VS, SO_FS);
 
   GLint modelLoc = GetUniformLoc(shaderProgram, "model");
-  glUniformMatrix4fv(modelLoc, 1, GL_FALSE, (float *)model);
-
   GLint viewLoc = GetUniformLoc(shaderProgram, "view");
-  glUniformMatrix4fv(viewLoc, 1, GL_FALSE, (float *)view);
-
   GLint projectionLoc = GetUniformLoc(shaderProgram, "projection");
+
+  glUniformMatrix4fv(modelLoc, 1, GL_FALSE, (float *)model);
+  glUniformMatrix4fv(viewLoc, 1, GL_FALSE, (float *)view);
   glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, (float *)projection);
 
-  // Linking vertex buffer with the attribute (saved in VAO).
-  glBindVertexArray(glAtom.vao);
-  glBindBuffer(GL_ARRAY_BUFFER, glAtom.vbo);
-
   GLint posAttrib = glGetAttribLocation(shaderProgram, "a_position");
+  GLint colorAttrib = glGetAttribLocation(shaderProgram, "a_color");
+  GLint uvsAttrib = glGetAttribLocation(shaderProgram, "a_texCoords");
+
   glEnableVertexAttribArray(posAttrib);
+  glEnableVertexAttribArray(colorAttrib);
+  glEnableVertexAttribArray(uvsAttrib);
+
   glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE,
                         8*sizeof(float), (void*)0);
-
-  GLint colorAttrib = glGetAttribLocation(shaderProgram, "a_color");
-  glEnableVertexAttribArray(colorAttrib);
   glVertexAttribPointer(colorAttrib, 3, GL_FLOAT, GL_FALSE,
                         8*sizeof(float), (void*)(3*sizeof(float)));
-
-  GLint uvsAttrib = glGetAttribLocation(shaderProgram, "a_texCoords");
-  glEnableVertexAttribArray(uvsAttrib);
   glVertexAttribPointer(uvsAttrib, 2, GL_FLOAT, GL_FALSE,
                         8*sizeof(float), (void*)(6*sizeof(float)));
 
@@ -566,26 +565,24 @@ main(int argc, char *argv[])
     glClearColor(0.0, 0.0, 0.4, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glBindVertexArray(glAtom.vao);
+    SetGeoForRendering();
+
     glBindTexture(GL_TEXTURE_2D, glAtom.texture);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, glAtom.ebo);
-    // The Vertex Attributes need to be set and for that VBO need to be binded.
-    glBindBuffer(GL_ARRAY_BUFFER, glAtom.vbo);
 
     glUseProgram(shaderProgram);
 
     GLint posAttrib = glGetAttribLocation(shaderProgram, "a_position");
+    GLint colorAttrib = glGetAttribLocation(shaderProgram, "a_color");
+    GLint uvsAttrib = glGetAttribLocation(shaderProgram, "a_texCoords");
+
     glEnableVertexAttribArray(posAttrib);
+    glEnableVertexAttribArray(colorAttrib);
+    glEnableVertexAttribArray(uvsAttrib);
+
     glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE,
                           8*sizeof(float), (void*)0);
-
-    GLint colorAttrib = glGetAttribLocation(shaderProgram, "a_color");
-    glEnableVertexAttribArray(colorAttrib);
     glVertexAttribPointer(colorAttrib, 3, GL_FLOAT, GL_FALSE,
                           8*sizeof(float), (void*)(3*sizeof(float)));
-
-    GLint uvsAttrib = glGetAttribLocation(shaderProgram, "a_texCoords");
-    glEnableVertexAttribArray(uvsAttrib);
     glVertexAttribPointer(uvsAttrib, 2, GL_FLOAT, GL_FALSE,
                           8*sizeof(float), (void*)(6*sizeof(float)));
 
@@ -594,14 +591,11 @@ main(int argc, char *argv[])
     // check NK_API int nk_window_is_closed(struct nk_context*, const char*);
     if (appState.drawGUI)
     {
-      static nk_flags window_flags = 0;
-      window_flags = NK_WINDOW_BORDER |
-                     NK_WINDOW_MOVABLE |
-                     NK_WINDOW_SCALABLE |
-                     NK_WINDOW_CLOSABLE |
-                     NK_WINDOW_MINIMIZABLE |
-                     NK_WINDOW_TITLE;
-      if (nk_begin(nkCtx, "Debug", nk_rect(10, 10, 400, 200), window_flags))
+      static nk_flags windowFlags = 0;
+      windowFlags = NK_WINDOW_BORDER | NK_WINDOW_MOVABLE |
+                    NK_WINDOW_SCALABLE | NK_WINDOW_CLOSABLE |
+                    NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE;
+      if (nk_begin(nkCtx, "Debug", nk_rect(10, 10, 400, 200), windowFlags))
       {
         nk_layout_row_dynamic(nkCtx, 20, 2);
         nk_label(nkCtx, "FPS (ms per frame)", NK_TEXT_LEFT);
