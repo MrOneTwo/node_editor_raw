@@ -234,75 +234,84 @@ main(int argc, char *argv[])
   LoadFont(fontPath);
   GetTextImage("All is well");
 
-  if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) {
-    SDL_Log("Failed to SDL_Init");
-    exit(EXIT_FAILURE);
+
+  SDL_Window* window = NULL;
+  SDL_GLContext glContext = {};
+  nk_context* nkCtx = NULL;
+
+  // Setup: SDL, GLEW, Nuklear.
+  {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) {
+      SDL_Log("Failed to SDL_Init");
+      exit(EXIT_FAILURE);
+    }
+
+    // Need to set some SDL specific things for OpenGL
+    if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE)) {
+      SDL_Log("%s", SDL_GetError());
+      exit(EXIT_FAILURE);
+    }
+    if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2)) {
+      SDL_Log("%s", SDL_GetError());
+      exit(EXIT_FAILURE);
+    }
+    if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0)) {
+      SDL_Log("%s", SDL_GetError());
+      exit(EXIT_FAILURE);
+    }
+    if (SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1)) {
+      SDL_Log("%s", SDL_GetError());
+      exit(EXIT_FAILURE);
+    }
+    if (SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8)) {
+      SDL_Log("%s", SDL_GetError());
+      exit(EXIT_FAILURE);
+    }
+    if (SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8)) {
+      SDL_Log("%s", SDL_GetError());
+      exit(EXIT_FAILURE);
+    }
+    if (SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8)) {
+      SDL_Log("%s", SDL_GetError());
+      exit(EXIT_FAILURE);
+    }
+    if (SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 8)) {
+      SDL_Log("%s", SDL_GetError());
+      exit(EXIT_FAILURE);
+    }
+
+    GetDisplayInformation();
+    perfCountFrequency = SDL_GetPerformanceFrequency();
+
+    window = SDL_CreateWindow(
+      "Node editor",
+      SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+      INIT_WINDOW_WIDTH, INIT_WINDOW_HEIGHT,
+      SDL_WINDOW_OPENGL|SDL_WINDOW_SHOWN|SDL_WINDOW_ALLOW_HIGHDPI
+    );
+
+    glContext = SDL_GL_CreateContext(window);
+    if (glContext == NULL) {
+      SDL_Log("%s", SDL_GetError());
+      exit(EXIT_FAILURE);
+    }
+    glViewport(0, 0, INIT_WINDOW_WIDTH, INIT_WINDOW_HEIGHT);
+
+    // Setup GLEW.
+    glewExperimental = GL_TRUE;
+    glewInit();  // glew looks up OpenGL functions.
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+    //glEnable(GL_CULL_FACE);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // Nuklear GUI init.
+    nkCtx = nk_sdl_init(window);
+    nk_font_atlas *atlas;
+    nk_sdl_font_stash_begin(&atlas);
+    nk_sdl_font_stash_end();
   }
 
-  GetDisplayInformation();
-  perfCountFrequency = SDL_GetPerformanceFrequency();
-
-  // Need to set some SDL specific things for OpenGL
-  if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE)) {
-    SDL_Log("%s", SDL_GetError());
-    exit(EXIT_FAILURE);
-  }
-  if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2)) {
-    SDL_Log("%s", SDL_GetError());
-    exit(EXIT_FAILURE);
-  }
-  if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0)) {
-    SDL_Log("%s", SDL_GetError());
-    exit(EXIT_FAILURE);
-  }
-  if (SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1)) {
-    SDL_Log("%s", SDL_GetError());
-    exit(EXIT_FAILURE);
-  }
-  if (SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8)) {
-    SDL_Log("%s", SDL_GetError());
-    exit(EXIT_FAILURE);
-  }
-  if (SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8)) {
-    SDL_Log("%s", SDL_GetError());
-    exit(EXIT_FAILURE);
-  }
-  if (SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8)) {
-    SDL_Log("%s", SDL_GetError());
-    exit(EXIT_FAILURE);
-  }
-  if (SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 8)) {
-    SDL_Log("%s", SDL_GetError());
-    exit(EXIT_FAILURE);
-  }
-
-  SDL_Window* window = SDL_CreateWindow(
-    "Node editor",
-    SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-    INIT_WINDOW_WIDTH, INIT_WINDOW_HEIGHT,
-    SDL_WINDOW_OPENGL|SDL_WINDOW_SHOWN|SDL_WINDOW_ALLOW_HIGHDPI
-  );
-
-  SDL_GLContext glContext = SDL_GL_CreateContext(window);
-  if (glContext == NULL) {
-    SDL_Log("%s", SDL_GetError());
-    exit(EXIT_FAILURE);
-  }
-  glViewport(0, 0, INIT_WINDOW_WIDTH, INIT_WINDOW_HEIGHT);
-
-  glewExperimental = GL_TRUE;
-  glewInit();  // glew will look up OpenGL functions
-  glEnable(GL_DEPTH_TEST);
-  glDepthFunc(GL_LEQUAL);
-  //glEnable(GL_CULL_FACE);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-  // NUKLEAR init
-  nk_context* nkCtx;
-  nkCtx = nk_sdl_init(window);
-  nk_font_atlas *atlas;
-  nk_sdl_font_stash_begin(&atlas);
-  nk_sdl_font_stash_end();
 
   controls.mouseSensitivity = 1.0f;
 
@@ -338,12 +347,11 @@ main(int argc, char *argv[])
 
 
   SetGeoForRendering();
-  GLuint vertexShader;
-  GLuint fragmentShader;
-  CompileShader(VS_texture, FS_default, &vertexShader, &fragmentShader);
-  GLuint shaderProgram = SetShader(vertexShader, fragmentShader);
-
-  // TODO (mc): fix this... it doesn't work
+  // Create shader objects.
+  GLuint SO_VS;
+  GLuint SO_FS;
+  CompileShader(VS_texture, FS_default, &SO_VS, &SO_FS);
+  GLuint shaderProgram = LinkShaderObjects(SO_VS, SO_FS);
 
   GLint modelLoc = GetUniformLoc(shaderProgram, "model");
   glUniformMatrix4fv(modelLoc, 1, GL_FALSE, (float *)model);
@@ -380,16 +388,10 @@ main(int argc, char *argv[])
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindVertexArray(0);
 
-
-
-  //
-  // Set things UP.
-  //
   ////////////////////////////////////////
   //
   // Prepare and LOOP.
   //
-
 
   uint8 framerateTarget = 60;
   float frametimeTarget = 1.0f/framerateTarget;
@@ -514,8 +516,7 @@ main(int argc, char *argv[])
       bool32 updateView = false;
       vec3 delta = GLM_VEC3_ZERO_INIT;
 
-      SDL_GetMouseState((int*)&(controls.mouseX),
-                        (int*)&(controls.mouseY));
+      SDL_GetMouseState((int*)&(controls.mouseX), (int*)&(controls.mouseY));
 
       if (controls.mmbState)
       {
@@ -571,6 +572,8 @@ main(int argc, char *argv[])
     // The Vertex Attributes need to be set and for that VBO need to be binded.
     glBindBuffer(GL_ARRAY_BUFFER, glAtom.vbo);
 
+    glUseProgram(shaderProgram);
+
     GLint posAttrib = glGetAttribLocation(shaderProgram, "a_position");
     glEnableVertexAttribArray(posAttrib);
     glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE,
@@ -586,7 +589,6 @@ main(int argc, char *argv[])
     glVertexAttribPointer(uvsAttrib, 2, GL_FLOAT, GL_FALSE,
                           8*sizeof(float), (void*)(6*sizeof(float)));
 
-    glUseProgram(shaderProgram);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
     // check NK_API int nk_window_is_closed(struct nk_context*, const char*);

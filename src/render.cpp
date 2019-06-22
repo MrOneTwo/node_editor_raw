@@ -16,7 +16,7 @@ GetDisplayInformation()
   SDL_Log("Display count: %d\n"
           "      Display refresh rate: %d\n",
           displayCount,
-          mode.refresh_rate); 
+          mode.refresh_rate);
 }
 
 //void
@@ -28,9 +28,12 @@ GetDisplayInformation()
 
 
 /*
- * SHADERS functionallity
+ * SHADERS functionality.
  */
 
+/*
+ * Compile shader sources into a shader objects.
+ */
 void
 CompileShader(const GLchar* const inVS, const GLchar* const inFS,
               GLuint* const outVS, GLuint* const outFS)
@@ -59,29 +62,33 @@ CompileShader(const GLchar* const inVS, const GLchar* const inFS,
   }
 }
 
+/*
+ * Links shader objects to the shader program.
+ */
 GLuint
-SetShader(GLuint inVS, GLuint inFS)
+LinkShaderObjects(GLuint inVS, GLuint inFS)
 {
-  GLuint shaderProgram = glCreateProgram();
-  glAttachShader(shaderProgram, inVS);
-  glAttachShader(shaderProgram, inFS);
-  glLinkProgram(shaderProgram);
-  glUseProgram(shaderProgram);
+  int success = 0;
+  char infoLog[512];
 
-  return shaderProgram;
-}
+  GLuint program = glCreateProgram();
+  glAttachShader(program, inVS);
+  glAttachShader(program, inFS);
+  glLinkProgram(program);
 
-void
-BindShaderLocations(GLint modelLoc,
-                    GLint viewLoc,
-                    GLint projectionLoc,
-                    float* modelData,
-                    float* viewData,
-                    float* projectionData)
-{
-  glUniformMatrix4fv(modelLoc, 1, GL_FALSE, modelData);
-  glUniformMatrix4fv(viewLoc, 1, GL_FALSE, viewData);
-  glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, projectionData);
+  glGetProgramiv(program, GL_LINK_STATUS, &success);
+  if (success == GL_FALSE)
+  {
+    glGetProgramInfoLog(program, 512, NULL, infoLog);
+    SDL_Log("Linking shader program failed: %s", infoLog);
+  }
+  else
+  {
+    // TODO(michalc): handle failure somehow.
+    glUseProgram(program);
+  }
+
+  return program;
 }
 
 GLint
@@ -90,8 +97,10 @@ GetUniformLoc(GLuint shaderProgram, const char* name)
   GLint planeIndexLoc = glGetUniformLocation(shaderProgram, name);
   char logBuffer[128];
   sprintf(logBuffer, "No '%s' uniform in the shader's code.", name);
-  if (planeIndexLoc == -1) {
+  if (planeIndexLoc == -1)
+  {
     SDL_Log(logBuffer);
   }
+
   return planeIndexLoc;
 }
