@@ -10,7 +10,6 @@ if "%1"=="x86" set platform=x86
 set warnFlags=/FC
 set includeFlags=/I..\SDL-mirror\include /I..\glew\include /I..\src\dirent_win
 set libsFlags=..\SDL-mirror\VisualC\x64\Release\SDL2.lib ..\glew\lib\Release\x64\glew32.lib opengl32.lib
-C:\Users\mc\gits\node_editor\glew\bin\Release\x64
 
 if not exist build mkdir build
 pushd build

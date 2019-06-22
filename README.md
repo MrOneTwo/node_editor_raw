@@ -1,8 +1,20 @@
+# Raw Node editor
 
-**WARNING**
+Node editor UX exploration. By *raw* I mean that it is basically an OpenGL app written from scratch. Nuklear GUI lib is used for statistics, debug, etc.
 
-There is build SDL commited in this repo... mea culpa. Clean it up one day.
-For now... fuck it.
+![](thumb.jpg)
 
-There is a lot of useful info [here](www.headerphile.com).
-Mostly about OpenGL, VBOs, VAOs.
+
+## Dependencies
+
+- SDL2
+- glew
+- cglm
+- dirent_win
+
+## Init project
+
+### GLEW
+
+Go into `auto` folder and do `make`. After that solution from `glew\build\vc15`
+should build fine.

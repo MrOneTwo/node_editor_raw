@@ -4,12 +4,14 @@
 
 #include <GL/glew.h>
 
+#define HAVE_M_PI  // SDL_stdinc.h has M_PI and it collides with Windows M_PI
 #define SDL_MAIN_HANDLED
 #include "SDL.h"
 
 #include <signal.h>
 #include <math.h>
-#include <x86intrin.h>
+//#include <x86intrin.h>
+#include <intrin.h>
 
 #include "cglm/cglm.h"
 
@@ -47,7 +49,6 @@
 #define NK_MAX_VERTEX_MEMORY    512 * 1024
 #define NK_MAX_ELEMENT_MEMORY   128 * 1024
 
-#define M_PI 3.14159265358979323846
 
 typedef struct Camera
 {
@@ -81,8 +82,8 @@ typedef struct GLAtom
   GLuint texture;
 } GLAtom;
 
-#define INIT_WINDOW_WIDTH    800
-#define INIT_WINDOW_HEIGHT   800
+#define INIT_WINDOW_WIDTH    1200
+#define INIT_WINDOW_HEIGHT   900
 
 typedef struct WindowParams
 {
@@ -102,7 +103,7 @@ void
 SignalHandler(int signal)
 {
   if (signal == SIGINT || SIGTERM) {
-    SDL_Log("Received signal %d", signal); 
+    SDL_Log("Received signal %d", signal);
     exit(EXIT_SUCCESS);
   }
 }
@@ -269,7 +270,7 @@ main(int argc, char *argv[])
   }
 
   SDL_Window* window = SDL_CreateWindow(
-    "My game",
+    "Node editor",
     SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
     INIT_WINDOW_WIDTH, INIT_WINDOW_HEIGHT,
     SDL_WINDOW_OPENGL|SDL_WINDOW_SHOWN|SDL_WINDOW_ALLOW_HIGHDPI
@@ -299,7 +300,7 @@ main(int argc, char *argv[])
   controls.mouseSensitivity = 0.01f;
 
   // model matrix holds, translation, scaling, rotation
-  mat4 model;
+  mat4 model = {};
   glm_mat4_identity(model);
   glm_scale_uni(model, 0.7f);
 
@@ -308,28 +309,25 @@ main(int argc, char *argv[])
   camera.pos[1] = 0.00f;
   camera.pos[2] = 0.30f;
   camera.yaw = M_PI/2.0f;
-  camera.pitch = 0.00f;
-  camera.roll = 0.00f;
-  mat4 view;
+  camera.pitch = 0.0f;
+  camera.roll = 0.0f;
+  mat4 view = {};
   UpdateViewMatrix(&camera, view);
 
   // projection holds the ortho/persp + frustrum
   mat4 projection;
-#ifdef NOT_USING_PERSPECTIVE
+#ifdef USING_PERSPECTIVE
   glm_perspective(90.0f,
                   1.0f,
                   CUSTOM_3D_SPACE_MIN_Z,
                   CUSTOM_3D_SPACE_MAX_Z,
                   projection);
+#else
+  glm_ortho(CUSTOM_3D_SPACE_MIN_X, CUSTOM_3D_SPACE_MAX_X,
+            CUSTOM_3D_SPACE_MIN_Y, CUSTOM_3D_SPACE_MAX_Y,
+            CUSTOM_3D_SPACE_MIN_Z, CUSTOM_3D_SPACE_MAX_Z,
+            projection);
 #endif
-  glm_ortho(
-    CUSTOM_3D_SPACE_MIN_X,
-    CUSTOM_3D_SPACE_MAX_X,
-    CUSTOM_3D_SPACE_MIN_Y,
-    CUSTOM_3D_SPACE_MAX_Y,
-    CUSTOM_3D_SPACE_MIN_Z,
-    CUSTOM_3D_SPACE_MAX_Z,
-    projection);
 
 
   SetGeoForRendering();
@@ -349,9 +347,7 @@ main(int argc, char *argv[])
   GLint projectionLoc = GetUniformLoc(shaderProgram, "projection");
   glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, (float *)projection);
 
-  /*
-   * Linking vertex buffer with the attribute (saved in VAO).
-   */
+  // Linking vertex buffer with the attribute (saved in VAO).
   glBindVertexArray(glAtom.vao);
   glBindBuffer(GL_ARRAY_BUFFER, glAtom.vbo);
 
@@ -379,17 +375,17 @@ main(int argc, char *argv[])
 
 
 
-  // 
+  //
   // Set things UP.
-  // 
+  //
   ////////////////////////////////////////
-  // 
+  //
   // Prepare and LOOP.
-  // 
+  //
 
 
   uint8 framerateTarget = 60;
-  float frametimeTarget = 1.0f/frametimeTarget;
+  float frametimeTarget = 1.0f/framerateTarget;
 
 
   WindowParams windowParameters = {};
@@ -404,7 +400,7 @@ main(int argc, char *argv[])
   int m = 0;
 
   uint64 lastCounter = SDL_GetPerformanceCounter();
-  uint64 lastCycleCount = _rdtsc();
+  uint64 lastCycleCount = __rdtsc();
 
 
   while (appState.running) {
@@ -491,9 +487,9 @@ main(int argc, char *argv[])
 
 
     ////////////////////////////////////////
-    // 
+    //
     // Input
-    // 
+    //
 
     SDL_GetMouseState((int*)&(controls.mouseX),
                       (int*)&(controls.mouseY));
@@ -510,9 +506,9 @@ main(int argc, char *argv[])
 
 
     ////////////////////////////////////////
-    // 
+    //
     // Timing
-    // 
+    //
 
     // TODO(mc): think which real64 can be changed to real32
     uint64 endCounter = SDL_GetPerformanceCounter();
@@ -522,20 +518,17 @@ main(int argc, char *argv[])
     real64 fps = (real64)perfCountFrequency / (real64)counterElapsed;
     lastCounter = endCounter;
 
-    uint64 endCycleCount = _rdtsc();
+    uint64 endCycleCount = __rdtsc();
     uint64 cyclesElapsed = endCycleCount - lastCycleCount;
     real64 mcpf = ((real64)cyclesElapsed); // / (1000.0f * 1000.0f));
     lastCycleCount = endCycleCount;
 
 
     ////////////////////////////////////////
-    // 
+    //
     // Render
 
-    SDL_GetWindowSize(window,
-                      (int*)(&(windowParameters.width)),
-                      (int*)(&(windowParameters.height))
-                      );
+    SDL_GetWindowSize(window, (int*)(&(windowParameters.width)), (int*)(&(windowParameters.height)));
     glViewport(0, 0, windowParameters.width, windowParameters.height);
 
     glClearColor(0.0, 0.0, 0.4, 1.0);
@@ -575,7 +568,7 @@ main(int argc, char *argv[])
                      NK_WINDOW_CLOSABLE |
                      NK_WINDOW_MINIMIZABLE |
                      NK_WINDOW_TITLE;
-      if (nk_begin(nkCtx, "Michal tries OpenGL", nk_rect(10, 10, 400, 200), window_flags))
+      if (nk_begin(nkCtx, "Debug", nk_rect(10, 10, 400, 200), window_flags))
       {
         nk_layout_row_dynamic(nkCtx, 20, 2);
         nk_label(nkCtx, "FPS (ms per frame)", NK_TEXT_LEFT);
@@ -620,7 +613,7 @@ main(int argc, char *argv[])
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glDeleteBuffers(1, &glAtom.vbo);
   glDeleteBuffers(1, &glAtom.ebo);
-  
+
   SDL_Quit();
   return 0;
 }
