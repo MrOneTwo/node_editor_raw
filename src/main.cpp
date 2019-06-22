@@ -304,7 +304,7 @@ main(int argc, char *argv[])
   nk_sdl_font_stash_begin(&atlas);
   nk_sdl_font_stash_end();
 
-  controls.mouseSensitivity = 0.01f;
+  controls.mouseSensitivity = 1.0f;
 
   // model matrix holds, translation, scaling, rotation
   mat4 model = {};
@@ -399,7 +399,7 @@ main(int argc, char *argv[])
   windowParameters.width = INIT_WINDOW_WIDTH;
   windowParameters.height = INIT_WINDOW_HEIGHT;
   State appState = {};
-  appState.drawGUI = true;
+  appState.drawGUI = false;
   appState.drawMode = GL_FILL;
   appState.running = true;
   SDL_Event event;
@@ -512,26 +512,29 @@ main(int argc, char *argv[])
 
     {
       bool32 updateView = false;
+      vec3 delta = GLM_VEC3_ZERO_INIT;
 
       SDL_GetMouseState((int*)&(controls.mouseX),
                         (int*)&(controls.mouseY));
 
       if (controls.mmbState)
       {
-        camera.pos[0] += controls.mouseSensitivity * (controls.mouseX - controlsPrev.mouseX);
-        camera.pos[1] += controls.mouseSensitivity * (controls.mouseY - controlsPrev.mouseY);
+        delta[0] = controls.mouseSensitivity * (controls.mouseX - controlsPrev.mouseX);
+        delta[1] = -(controls.mouseSensitivity * (controls.mouseY - controlsPrev.mouseY));
+        camera.pos[0] += delta[0];
+        camera.pos[1] += delta[1];
         updateView = true;
       }
 
       if (updateView)
       {
-        glm_translate(view, camera.pos);
+        glm_translate(view, delta);
         GLint viewLoc = GetUniformLoc(shaderProgram, "view");
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, (float *)view);
       }
-    }
 
-    controlsPrev = controls;
+      controlsPrev = controls;
+    }
 
     ////////////////////////////////////////
     //
