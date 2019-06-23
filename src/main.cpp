@@ -109,6 +109,7 @@ SignalHandler(int signal)
   }
 }
 
+/*
 float vertices[] = {
    // positions           // colors           // uvs
    200.0f,  120.0f,  0.0f,   0.0f, 1.0f, 1.0f,   1.0f, 1.0f,
@@ -120,6 +121,43 @@ float vertices[] = {
 GLint indices[] = {
   0, 1, 3,
   1, 2, 3
+};
+*/
+
+float vertices[] = {
+  -200.000000f, -105.876236f, 0.0f, 0.2f, 0.2f, 0.2f, 0.0f, 0.0f,
+  -185.611237f, -120.000000f, 0.0f, 0.2f, 0.2f, 0.2f, 0.0f, 0.0f,
+  -192.805618f, -118.107780f, 0.0f, 0.2f, 0.2f, 0.2f, 0.0f, 0.0f,
+  -198.072281f, -112.938126f, 0.0f, 0.2f, 0.2f, 0.2f, 0.0f, 0.0f,
+   200.000000f, -105.876236f, 0.0f, 0.2f, 0.2f, 0.2f, 0.0f, 0.0f,
+   185.611237f, -120.000000f, 0.0f, 0.2f, 0.2f, 0.2f, 0.0f, 0.0f,
+   192.805618f, -118.107780f, 0.0f, 0.2f, 0.2f, 0.2f, 0.0f, 0.0f,
+   198.072281f, -112.938126f, 0.0f, 0.2f, 0.2f, 0.2f, 0.0f, 0.0f,
+  -200.000000f,  105.876236f, 0.0f, 0.2f, 0.2f, 0.2f, 0.0f, 0.0f,
+  -185.611237f,  120.000000f, 0.0f, 0.2f, 0.2f, 0.2f, 0.0f, 0.0f,
+  -192.805618f,  118.107780f, 0.0f, 0.2f, 0.2f, 0.2f, 0.0f, 0.0f,
+  -198.072281f,  112.938126f, 0.0f, 0.2f, 0.2f, 0.2f, 0.0f, 0.0f,
+   200.000000f,  105.876236f, 0.0f, 0.2f, 0.2f, 0.2f, 0.0f, 0.0f,
+   185.611237f,  120.000000f, 0.0f, 0.2f, 0.2f, 0.2f, 0.0f, 0.0f,
+   192.805618f,  118.107780f, 0.0f, 0.2f, 0.2f, 0.2f, 0.0f, 0.0f,
+   198.072281f,  112.938126f, 0.0f, 0.2f, 0.2f, 0.2f, 0.0f, 0.0f,
+};
+
+GLint indices[] = {
+  4, 7, 3,
+  0, 4, 3,
+  10, 9, 14,
+  12, 11, 15,
+  11, 10, 14,
+  3, 7, 6,
+  2, 6, 1,
+  6, 5, 1,
+  2, 3, 6,
+  11, 14, 15,
+  4, 0, 12,
+  9, 13, 14,
+  11, 12, 8,
+  12, 0, 8,
 };
 
 
@@ -321,7 +359,7 @@ main(int argc, char *argv[])
   // model matrix holds, translation, scaling, rotation
   mat4 model = {};
   glm_mat4_identity(model);
-  glm_scale_uni(model, 0.7f);
+  //glm_scale_uni(model, 0.7f);
 
   // view matrix represents point of view in the scene - camera
   camera.pos[0] = 0.00f;
@@ -559,34 +597,15 @@ main(int argc, char *argv[])
     //
     // Render
 
+    // TODO(michalc): the problem is that drawing the geometry has to be after drawing the GUI.
+    // Otherwise the geometry rendering doesn't update. That means that the geometry overlaps the UI
+    // which is less than ideal.
+
     SDL_GetWindowSize(window, (int*)(&(windowParameters.width)), (int*)(&(windowParameters.height)));
     glViewport(0, 0, windowParameters.width, windowParameters.height);
 
     glClearColor(0.0, 0.0, 0.4, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    SetGeoForRendering();
-
-    glBindTexture(GL_TEXTURE_2D, glAtom.texture);
-
-    glUseProgram(shaderProgram);
-
-    GLint posAttrib = glGetAttribLocation(shaderProgram, "a_position");
-    GLint colorAttrib = glGetAttribLocation(shaderProgram, "a_color");
-    GLint uvsAttrib = glGetAttribLocation(shaderProgram, "a_texCoords");
-
-    glEnableVertexAttribArray(posAttrib);
-    glEnableVertexAttribArray(colorAttrib);
-    glEnableVertexAttribArray(uvsAttrib);
-
-    glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE,
-                          8*sizeof(float), (void*)0);
-    glVertexAttribPointer(colorAttrib, 3, GL_FLOAT, GL_FALSE,
-                          8*sizeof(float), (void*)(3*sizeof(float)));
-    glVertexAttribPointer(uvsAttrib, 2, GL_FLOAT, GL_FALSE,
-                          8*sizeof(float), (void*)(6*sizeof(float)));
-
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
     // check NK_API int nk_window_is_closed(struct nk_context*, const char*);
     if (appState.drawGUI)
@@ -619,6 +638,29 @@ main(int argc, char *argv[])
 
       nk_sdl_render(NK_ANTI_ALIASING_ON, NK_MAX_VERTEX_MEMORY, NK_MAX_ELEMENT_MEMORY);
     }
+
+    SetGeoForRendering();
+
+    glBindTexture(GL_TEXTURE_2D, glAtom.texture);
+
+    glUseProgram(shaderProgram);
+
+    GLint posAttrib = glGetAttribLocation(shaderProgram, "a_position");
+    GLint colorAttrib = glGetAttribLocation(shaderProgram, "a_color");
+    GLint uvsAttrib = glGetAttribLocation(shaderProgram, "a_texCoords");
+
+    glEnableVertexAttribArray(posAttrib);
+    glEnableVertexAttribArray(colorAttrib);
+    glEnableVertexAttribArray(uvsAttrib);
+
+    glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE,
+                          8*sizeof(float), (void*)0);
+    glVertexAttribPointer(colorAttrib, 3, GL_FLOAT, GL_FALSE,
+                          8*sizeof(float), (void*)(3*sizeof(float)));
+    glVertexAttribPointer(uvsAttrib, 2, GL_FLOAT, GL_FALSE,
+                          8*sizeof(float), (void*)(6*sizeof(float)));
+
+    glDrawElements(GL_TRIANGLES, 3*14, GL_UNSIGNED_INT, 0);
 
     SDL_GL_SwapWindow(window);
 
