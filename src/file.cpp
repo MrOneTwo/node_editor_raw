@@ -27,10 +27,11 @@ LoadEntireFileToMemory(char* fileName, AssetTable* assetTable, uint32* size)
 {
   // TODO(mc): probably should be SDL_AllocRW
   // TODO(mc): should it be (void*)
-  void* storagePointer = assetTable->storageMemory->transientTail;
+  void* storagePointer = assetTable->storageMemory->transient.cursor;
   SDL_RWops* fileHandle = SDL_RWFromFile(fileName, "rb");
   if (fileHandle == NULL) {
     SDL_Log("Failed LoadEntireFile(): %s", fileName);
+    return NULL;
   }
   // TODO(mc): check if opened properly
   uint8 unitSize = 1;

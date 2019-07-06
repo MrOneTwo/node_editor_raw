@@ -13,16 +13,19 @@
 
 #define ASSETS_MAX_COUNT 128
 
+typedef struct MemoryBlock {
+  // valid as in allocated and... valid...
+  bool32 valid;
+  uint64 size;
+  void* memory;
+  // cursor points to the end of the used memory + 1. That means it can be used to
+  // write into the memory.
+  void* cursor;
+} MemoryBlock;
+
 typedef struct Memory {
-  bool32 isInitialized;
-
-  uint64 transientMemorySize;
-  void* transientMemory;
-  void* transientTail;
-
-  uint64 persistentMemorySize;
-  void* persistentMemory;
-  void* persistentTail;
+  MemoryBlock transient;
+  MemoryBlock persistent;
 } Memory;
 
 typedef enum AssetType {
@@ -44,12 +47,24 @@ typedef struct AssetTable {
   Memory* storageMemory;
 } AssetTable;
 
-typedef struct Model3D {
+typedef struct Mesh {
   char* name;
   float* vertices;
   uint32* indices;
   float* normals;
   float* verticesColors;
   float* uvs;
-} Model3D;
+} Mesh;
 
+
+internal void
+InitMemoryBlock(MemoryBlock* mb)
+{
+  Assert(mb->size > 0U);
+  if (!mb->valid)
+  {
+    mb->memory = malloc(mb->size);
+    mb->cursor = mb->memory;
+    mb->valid = true;
+  }
+}

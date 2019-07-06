@@ -50,16 +50,14 @@
 #define NK_MAX_ELEMENT_MEMORY   128 * 1024
 
 
-typedef struct Camera
-{
+typedef struct Camera {
   vec3 pos;
   float yaw;
   float roll;
   float pitch;
 } Camera;
 
-typedef struct Controls
-{
+typedef struct Controls {
   bool32 lmbState;
   bool32 rmbState;
   bool32 mmbState;
@@ -68,15 +66,13 @@ typedef struct Controls
   float mouseSensitivity;
 } Controls;
 
-typedef struct State
-{
+typedef struct State {
   bool32 drawGUI;
   GLuint drawMode;
   bool32 running;
 } State;
 
-typedef struct GLAtom
-{
+typedef struct GLAtom {
   GLuint vao;
   GLuint vbo;
   GLuint ebo;
@@ -86,8 +82,7 @@ typedef struct GLAtom
 #define INIT_WINDOW_WIDTH    1200
 #define INIT_WINDOW_HEIGHT   900
 
-typedef struct WindowParams
-{
+typedef struct WindowParams {
   uint16 width;
   uint16 height;
 } WindowParams;
@@ -98,6 +93,16 @@ global_variable Controls controlsPrev = {};
 
 
 global_variable uint64 perfCountFrequency;
+
+
+
+typedef struct Node
+{
+  NodeID id;
+  // TODO(michalc): pack into a vector?
+  float x, y;
+  Mesh mesh;
+} Node;
 
 
 void
@@ -252,24 +257,25 @@ main(int argc, char *argv[])
   signal(SIGINT, SignalHandler);
   signal(SIGTERM, SignalHandler);
 
+  MemoryBlock nodesStorage;
+  nodesStorage.size = Megabytes(2);
+  InitMemoryBlock(&nodesStorage);
+
   Memory mem = {};
-  if (!mem.isInitialized)
-  {
-    mem.isInitialized = true;
-    mem.transientMemorySize = Megabytes(8);
-    mem.persistentMemorySize = Megabytes(128);
-    // TODO(michalc): need a better/cross platform malloc?
-    mem.transientMemory = malloc(mem.transientMemorySize);
-    mem.transientTail = mem.transientMemory;
-    mem.persistentMemory = malloc(mem.persistentMemorySize);
-    mem.persistentTail = mem.persistentMemory;
-  }
+  mem.transient.size = Megabytes(8);
+  mem.persistent.size = Megabytes(128);
+  // TODO(michalc): need a better/cross platform malloc?
+  InitMemoryBlock(&mem.transient);
+  InitMemoryBlock(&mem.persistent);
+
   AssetTable assetTable = {};
   assetTable.storageMemory = &mem;
 
-  LoadAsset("./resources/cube.obj", &assetTable, ASSET_MODEL3D_OBJ);
-  Model3D modelOBJ = {};
-  RetriveOBJ(0, &assetTable, &modelOBJ);
+  if (LoadAsset("./resources/cube.obj", &assetTable, ASSET_MODEL3D_OBJ) == 0)
+  {
+    Mesh modelOBJ = {};
+    RetriveOBJ(0, &assetTable, &modelOBJ);
+  }
 
   char* fontPath = "./resources/fonts/OpenSans-Regular.ttf";
   LoadFont(fontPath);

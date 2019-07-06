@@ -37,8 +37,8 @@ AddAsset(Asset* asset, AssetTable* assetTable)
 
   // TODO(michalc): fix size getting
   uint32 assetSize = sizeof((uint8*)(asset->memory));
-  assetTable->storageMemory->transientTail =
-    (uint8*)assetTable->storageMemory->transientTail + assetSize;
+  assetTable->storageMemory->transient.cursor =
+    (uint8*)assetTable->storageMemory->transient.cursor + assetSize;
 
   // TODO(michalc): always to 0...?
   assetTable->assets[0] = *asset;
@@ -50,15 +50,21 @@ AddAsset(Asset* asset, AssetTable* assetTable)
  * filled in and pushed into assetTable. AddAsset pushes transientTail to the
  * end of the loaded data.
  */
-internal void
+internal int8
 LoadAsset(char* path, AssetTable* assetTable, AssetType type)
 {
+  int8 status = 0;
   Asset asset = {};
   asset.type = ASSET_MODEL3D_OBJ;
   // Plug the memory pointer to the transient memory and fill in the size.
   asset.memory = LoadEntireFileToMemory(path, assetTable, &asset.size);
 
-  AddAsset(&asset, assetTable);
+  if (asset.memory) {
+    AddAsset(&asset, assetTable);
+    status = -1;
+  }
+
+  return status;
 }
 
 /*
@@ -202,7 +208,7 @@ ParseOBJLine(char* lineStart,
  * Parse data from transient memory into the persistent memory.
  */
 internal void
-RetriveOBJ(uint8 index, AssetTable* assetTable, Model3D* model)
+RetriveOBJ(uint8 index, AssetTable* assetTable, Mesh* model)
 {
   Asset asset = assetTable->assets[index];
   char* assetMemoryPointer = (char*)(asset.memory);
@@ -229,27 +235,27 @@ RetriveOBJ(uint8 index, AssetTable* assetTable, Model3D* model)
           {
             if (model->vertices == NULL)
             {
-              model->vertices = (float*)assetTable->storageMemory->persistentTail;
+              model->vertices = (float*)assetTable->storageMemory->persistent.cursor;
             }
-            memcpy(assetTable->storageMemory->persistentTail,
+            memcpy(assetTable->storageMemory->persistent.cursor,
                    values, valuesCount*sizeof(float));
           } break;
         case OBJ_LINE_UVS_POSITION:
           {
             if (model->uvs == NULL)
             {
-              model->uvs = (float*)assetTable->storageMemory->persistentTail;
+              model->uvs = (float*)assetTable->storageMemory->persistent.cursor;
             }
-            memcpy(assetTable->storageMemory->persistentTail,
+            memcpy(assetTable->storageMemory->persistent.cursor,
                    values, valuesCount*sizeof(float));
           } break;
         case OBJ_LINE_VERT_INDICES: 
           {
             if (model->indices == NULL)
             {
-              model->indices = (uint32*)assetTable->storageMemory->persistentTail;
+              model->indices = (uint32*)assetTable->storageMemory->persistent.cursor;
             }
-            memcpy(assetTable->storageMemory->persistentTail,
+            memcpy(assetTable->storageMemory->persistent.cursor,
                    values, valuesCount*sizeof(uint32));
           } break;
         default:
@@ -258,8 +264,8 @@ RetriveOBJ(uint8 index, AssetTable* assetTable, Model3D* model)
           } break;
       }
 
-      assetTable->storageMemory->persistentTail =
-        (float*)assetTable->storageMemory->persistentTail + valuesCount;
+      assetTable->storageMemory->persistent.cursor =
+        (float*)assetTable->storageMemory->persistent.cursor + valuesCount;
     }
   }
   while (assetMemorySize > 0);
