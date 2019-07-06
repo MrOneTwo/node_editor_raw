@@ -1,3 +1,7 @@
+---
+tags: ["UI", "UX", "opengl"]
+---
+
 # Raw Node editor
 
 Node editor UX exploration. By *raw* I mean that it is basically an OpenGL app written from scratch. Nuklear GUI lib is used for statistics, debug, etc.
