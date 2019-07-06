@@ -49,11 +49,24 @@ typedef struct AssetTable {
 
 typedef struct Mesh {
   char* name;
+
+  uint8 strideVertices;
+  uint8 strideIndices;
+  uint8 strideNormals;
+  uint8 strideColors;
+  uint8 strideUVs;
+
+  uint32 countVertices;
+  uint32 countIndices;
+  uint32 countNormals;
+  uint32 countColors;
+  uint32 countUVs;
+
   float* vertices;
   uint32* indices;
   float* normals;
   float* verticesColors;
-  float* uvs;
+  float* UVs;
 } Mesh;
 
 

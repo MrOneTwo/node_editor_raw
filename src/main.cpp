@@ -205,7 +205,7 @@ GenerateBuffers()
 }
 
 void
-SetGeoForRendering()
+SetGeoForRendering(Mesh m)
 {
   // Make this VAO the active one (remember OpenGL is a state machine).
   // You can have different VBO and VAO active. This bind has only one argument
@@ -216,11 +216,15 @@ SetGeoForRendering()
   // You can have different VBO and VAO active. First argument specifies
   // the role of this buffer.
   glBindBuffer(GL_ARRAY_BUFFER, glAtom.vbo);
-  // describe the data in the buffer
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+  // describe the data in the buffer. size is the total size of the buffer.
+  glBufferData(GL_ARRAY_BUFFER,
+               m.countVertices * sizeof(m.vertices[0]) * 8, // 8 is the number of elements: verts, colors, uvs in a line
+               m.vertices, GL_STATIC_DRAW);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, glAtom.ebo);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), (GLvoid*)indices, GL_STATIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+               m.countIndices * sizeof(m.indices[0]),
+               (GLvoid*)(m.indices), GL_STATIC_DRAW);
 
   glBindTexture(GL_TEXTURE_2D, glAtom.texture);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RED,
@@ -260,6 +264,29 @@ main(int argc, char *argv[])
   MemoryBlock nodesStorage;
   nodesStorage.size = Megabytes(2);
   InitMemoryBlock(&nodesStorage);
+
+  // Temporary test crap...
+
+  Node node1 = {};
+
+  Mesh node1Mesh = {};
+
+  node1Mesh.vertices = vertices;
+  node1Mesh.indices = (uint32*)indices;
+  node1Mesh.strideVertices = 8*sizeof(float);
+  node1Mesh.strideColors = 8*sizeof(float);
+  node1Mesh.strideIndices = 8*sizeof(float);
+  node1Mesh.strideUVs = 8*sizeof(float);
+  node1Mesh.countVertices = 16U;
+  node1Mesh.countIndices = 42U;
+  node1Mesh.countColors = 16U;
+
+  node1.id = 1;
+  node1.mesh = node1Mesh;
+
+
+  // ...end of temporary test crap.
+
 
   Memory mem = {};
   mem.transient.size = Megabytes(8);
@@ -394,7 +421,7 @@ main(int argc, char *argv[])
 
 
   GenerateBuffers();
-  SetGeoForRendering();
+  SetGeoForRendering(node1.mesh);
   // Create shader objects.
   GLuint SO_VS;
   GLuint SO_FS;
@@ -418,11 +445,11 @@ main(int argc, char *argv[])
   glEnableVertexAttribArray(uvsAttrib);
 
   glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE,
-                        8*sizeof(float), (void*)0);
+                        node1.mesh.strideVertices, (void*)0);
   glVertexAttribPointer(colorAttrib, 3, GL_FLOAT, GL_FALSE,
-                        8*sizeof(float), (void*)(3*sizeof(float)));
+                        node1.mesh.strideColors, (void*)(3*sizeof(float)));
   glVertexAttribPointer(uvsAttrib, 2, GL_FLOAT, GL_FALSE,
-                        8*sizeof(float), (void*)(6*sizeof(float)));
+                        node1.mesh.strideUVs, (void*)(6*sizeof(float)));
 
   // Unbinding to be sure it's a clean slate before actual loop.
   // Doing that mostly to understand what's going on.
@@ -645,7 +672,7 @@ main(int argc, char *argv[])
       nk_sdl_render(NK_ANTI_ALIASING_ON, NK_MAX_VERTEX_MEMORY, NK_MAX_ELEMENT_MEMORY);
     }
 
-    SetGeoForRendering();
+    SetGeoForRendering(node1.mesh);
 
     glBindTexture(GL_TEXTURE_2D, glAtom.texture);
 
@@ -660,11 +687,11 @@ main(int argc, char *argv[])
     glEnableVertexAttribArray(uvsAttrib);
 
     glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE,
-                          8*sizeof(float), (void*)0);
+                          node1.mesh.strideVertices, (void*)0);
     glVertexAttribPointer(colorAttrib, 3, GL_FLOAT, GL_FALSE,
-                          8*sizeof(float), (void*)(3*sizeof(float)));
+                          node1.mesh.strideColors, (void*)(3*sizeof(float)));
     glVertexAttribPointer(uvsAttrib, 2, GL_FLOAT, GL_FALSE,
-                          8*sizeof(float), (void*)(6*sizeof(float)));
+                          node1.mesh.strideUVs, (void*)(6*sizeof(float)));
 
     glDrawElements(GL_TRIANGLES, 3*14, GL_UNSIGNED_INT, 0);
 

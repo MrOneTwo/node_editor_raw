@@ -242,9 +242,9 @@ RetriveOBJ(uint8 index, AssetTable* assetTable, Mesh* model)
           } break;
         case OBJ_LINE_UVS_POSITION:
           {
-            if (model->uvs == NULL)
+            if (model->UVs == NULL)
             {
-              model->uvs = (float*)assetTable->storageMemory->persistent.cursor;
+              model->UVs = (float*)assetTable->storageMemory->persistent.cursor;
             }
             memcpy(assetTable->storageMemory->persistent.cursor,
                    values, valuesCount*sizeof(float));
