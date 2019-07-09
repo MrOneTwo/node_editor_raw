@@ -12,12 +12,14 @@
 #include <math.h>
 //#include <x86intrin.h>
 #include <intrin.h>
+#include <cstring>
 
 #include "cglm/cglm.h"
 
 #include "shaders.h"
 
 #include "base.h"
+#include "entities.cpp"
 #include "storage.cpp"
 
 #include "file.cpp"
@@ -93,16 +95,6 @@ global_variable Controls controlsPrev = {};
 
 
 global_variable uint64 perfCountFrequency;
-
-
-
-typedef struct Node
-{
-  NodeID id;
-  // TODO(michalc): pack into a vector?
-  float x, y;
-  Mesh mesh;
-} Node;
 
 
 void
@@ -261,9 +253,11 @@ main(int argc, char *argv[])
   signal(SIGINT, SignalHandler);
   signal(SIGTERM, SignalHandler);
 
-  MemoryBlock nodesStorage;
-  nodesStorage.size = Megabytes(2);
-  InitMemoryBlock(&nodesStorage);
+  // TODO: this memory block needs a struct that describes it.
+  MemoryBlock nodesStorage = {};
+  InitMemoryBlock(&nodesStorage, Megabytes(2));
+  NodesIndex nodesIndex = {};
+  nodesIndex.nodesMemory = (Node*)nodesStorage.memory;
 
   // Temporary test crap...
 
@@ -284,16 +278,15 @@ main(int argc, char *argv[])
   node1.id = 1;
   node1.mesh = node1Mesh;
 
+  AddNode(&nodesIndex, &node1);
 
   // ...end of temporary test crap.
 
 
   Memory mem = {};
-  mem.transient.size = Megabytes(8);
-  mem.persistent.size = Megabytes(128);
   // TODO(michalc): need a better/cross platform malloc?
-  InitMemoryBlock(&mem.transient);
-  InitMemoryBlock(&mem.persistent);
+  InitMemoryBlock(&mem.transient, Megabytes(8));
+  InitMemoryBlock(&mem.persistent, Megabytes(128));
 
   AssetTable assetTable = {};
   assetTable.storageMemory = &mem;

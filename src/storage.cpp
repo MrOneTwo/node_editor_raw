@@ -28,18 +28,10 @@ typedef struct Memory {
   MemoryBlock persistent;
 } Memory;
 
-typedef enum AssetType {
-  ASSET_NONE,
-  ASSET_MODEL3D_OBJ,
-  ASSET_MODEL3D_GLTF,
-  ASSET_FONT_TTF,
-} AssetType;
-
-typedef struct Asset {
-  AssetType type;
-  uint32 size;
-  void* memory;
-} Asset;
+typedef struct NodesIndex {
+  Node* nodesMemory;
+  uint32 nodesCount;
+} NodesIndex;
 
 typedef struct AssetTable {
   uint32 assetsCount;
@@ -47,37 +39,24 @@ typedef struct AssetTable {
   Memory* storageMemory;
 } AssetTable;
 
-typedef struct Mesh {
-  char* name;
-
-  uint8 strideVertices;
-  uint8 strideIndices;
-  uint8 strideNormals;
-  uint8 strideColors;
-  uint8 strideUVs;
-
-  uint32 countVertices;
-  uint32 countIndices;
-  uint32 countNormals;
-  uint32 countColors;
-  uint32 countUVs;
-
-  float* vertices;
-  uint32* indices;
-  float* normals;
-  float* verticesColors;
-  float* UVs;
-} Mesh;
-
 
 internal void
-InitMemoryBlock(MemoryBlock* mb)
+InitMemoryBlock(MemoryBlock* mb, uint32 size)
 {
-  Assert(mb->size > 0U);
+  Assert(size > 0U);
   if (!mb->valid)
   {
-    mb->memory = malloc(mb->size);
+    mb->memory = malloc(size);
+    mb->size = size;
     mb->cursor = mb->memory;
     mb->valid = true;
   }
+}
+
+
+internal void
+AddNode(NodesIndex* ni, Node* n)
+{
+  memcpy(ni->nodesMemory + ni->nodesCount * sizeof(Node), n, sizeof(Node));
+  ni->nodesCount++;
 }
