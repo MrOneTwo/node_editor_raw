@@ -261,8 +261,6 @@ main(int argc, char *argv[])
 
   // Temporary test crap...
 
-  Node node1 = {};
-
   Mesh node1Mesh = {};
 
   node1Mesh.vertices = vertices;
@@ -275,10 +273,9 @@ main(int argc, char *argv[])
   node1Mesh.countIndices = 42U;
   node1Mesh.countColors = 16U;
 
-  node1.id = 1;
-  node1.mesh = node1Mesh;
+  AddNode(&nodesIndex, "First node", 0, 100, 100, node1Mesh);
 
-  AddNode(&nodesIndex, &node1);
+  Node* node1 = FindNodeByLabel(&nodesIndex, "First node");
 
   // ...end of temporary test crap.
 
@@ -414,7 +411,7 @@ main(int argc, char *argv[])
 
 
   GenerateBuffers();
-  SetGeoForRendering(node1.mesh);
+  SetGeoForRendering(node1->mesh);
   // Create shader objects.
   GLuint SO_VS;
   GLuint SO_FS;
@@ -438,11 +435,11 @@ main(int argc, char *argv[])
   glEnableVertexAttribArray(uvsAttrib);
 
   glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE,
-                        node1.mesh.strideVertices, (void*)0);
+                        node1->mesh.strideVertices, (void*)0);
   glVertexAttribPointer(colorAttrib, 3, GL_FLOAT, GL_FALSE,
-                        node1.mesh.strideColors, (void*)(3*sizeof(float)));
+                        node1->mesh.strideColors, (void*)(3*sizeof(float)));
   glVertexAttribPointer(uvsAttrib, 2, GL_FLOAT, GL_FALSE,
-                        node1.mesh.strideUVs, (void*)(6*sizeof(float)));
+                        node1->mesh.strideUVs, (void*)(6*sizeof(float)));
 
   // Unbinding to be sure it's a clean slate before actual loop.
   // Doing that mostly to understand what's going on.
@@ -665,7 +662,7 @@ main(int argc, char *argv[])
       nk_sdl_render(NK_ANTI_ALIASING_ON, NK_MAX_VERTEX_MEMORY, NK_MAX_ELEMENT_MEMORY);
     }
 
-    SetGeoForRendering(node1.mesh);
+    SetGeoForRendering(node1->mesh);
 
     glBindTexture(GL_TEXTURE_2D, glAtom.texture);
 
@@ -680,11 +677,11 @@ main(int argc, char *argv[])
     glEnableVertexAttribArray(uvsAttrib);
 
     glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE,
-                          node1.mesh.strideVertices, (void*)0);
+                          node1->mesh.strideVertices, (void*)0);
     glVertexAttribPointer(colorAttrib, 3, GL_FLOAT, GL_FALSE,
-                          node1.mesh.strideColors, (void*)(3*sizeof(float)));
+                          node1->mesh.strideColors, (void*)(3*sizeof(float)));
     glVertexAttribPointer(uvsAttrib, 2, GL_FLOAT, GL_FALSE,
-                          node1.mesh.strideUVs, (void*)(6*sizeof(float)));
+                          node1->mesh.strideUVs, (void*)(6*sizeof(float)));
 
     glDrawElements(GL_TRIANGLES, 3*14, GL_UNSIGNED_INT, 0);
 

@@ -55,8 +55,43 @@ InitMemoryBlock(MemoryBlock* mb, uint32 size)
 
 
 internal void
-AddNode(NodesIndex* ni, Node* n)
+SaveNode(NodesIndex* ni, Node* n)
 {
   memcpy(ni->nodesMemory + ni->nodesCount * sizeof(Node), n, sizeof(Node));
   ni->nodesCount++;
+}
+
+
+internal void
+AddNode(NodesIndex* ni, char* label, NodeID id, float x, float y, Mesh mesh)
+{
+  Node node = {};
+
+  strncpy(node.label, label, strlen(label));
+  node.id = id;
+  node.x = x;
+  node.y = y;
+  node.mesh = mesh;
+
+  SaveNode(ni, &node);
+}
+
+
+internal Node*
+FindNodeByLabel(NodesIndex* ni, char* label)
+{
+  for (Node* cursor = ni->nodesMemory; cursor < (ni->nodesMemory + ni->nodesCount * sizeof(Node)); cursor++)
+  {
+    if (strcmp(label, cursor->label) == 0)
+    {
+      return cursor;
+    }
+  }
+}
+
+
+internal Node*
+FindNodeByID()
+{
+
 }

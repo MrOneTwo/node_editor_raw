@@ -35,6 +35,7 @@ typedef struct Mesh {
 
 typedef struct Node
 {
+  char label[128];
   NodeID id;
   // TODO(michalc): pack into a vector?
   float x, y;
