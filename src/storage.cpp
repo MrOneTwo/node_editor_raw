@@ -86,6 +86,10 @@ FindNodeByLabel(NodesIndex* ni, char* label)
     {
       return cursor;
     }
+    else
+    {
+      NULL;
+    }
   }
 }
 
