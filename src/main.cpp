@@ -257,7 +257,8 @@ main(int argc, char *argv[])
   MemoryBlock nodesStorage = {};
   InitMemoryBlock(&nodesStorage, Megabytes(2));
   NodesIndex nodesIndex = {};
-  nodesIndex.nodesMemory = (Node*)nodesStorage.memory;
+  // TODO(michalc): should it use the MemoryBlock struct? For now it only points to the raw memory
+  nodesIndex.nodesMemory = nodesStorage;
 
   // Temporary test crap...
 

@@ -29,7 +29,8 @@ typedef struct Memory {
 } Memory;
 
 typedef struct NodesIndex {
-  Node* nodesMemory;
+  // TODO(michalc): should this be a MemoryBlock?
+  MemoryBlock nodesMemory;
   uint32 nodesCount;
 } NodesIndex;
 
@@ -57,7 +58,7 @@ InitMemoryBlock(MemoryBlock* mb, uint32 size)
 internal void
 SaveNode(NodesIndex* ni, Node* n)
 {
-  memcpy(ni->nodesMemory + ni->nodesCount * sizeof(Node), n, sizeof(Node));
+  memcpy((Node*)ni->nodesMemory.memory + ni->nodesCount * sizeof(Node), n, sizeof(Node));
   ni->nodesCount++;
 }
 
@@ -73,22 +74,42 @@ AddNode(NodesIndex* ni, char* label, NodeID id, float x, float y, Mesh mesh)
   node.y = y;
   node.mesh = mesh;
 
-  SaveNode(ni, &node);
+  // TODO(michalc): what if we reached the limit? Then we have to look for a spot where ID == -1
+
+  if (ni->nodesCount * sizeof(Node) < ni->nodesMemory.size)
+  {
+    SaveNode(ni, &node);
+  }
 }
 
 
+// TODO(michalc); probably labels should be in a separate index since for better nodes finding (more performant)
 internal Node*
 FindNodeByLabel(NodesIndex* ni, char* label)
 {
-  for (Node* cursor = ni->nodesMemory; cursor < (ni->nodesMemory + ni->nodesCount * sizeof(Node)); cursor++)
+  for (Node* cursor = (Node*)ni->nodesMemory.memory; cursor < ((Node*)ni->nodesMemory.memory + ni->nodesCount * sizeof(Node)); cursor++)
   {
     if (strcmp(label, cursor->label) == 0)
     {
       return cursor;
     }
-    else
+  }
+  return NULL;
+}
+
+
+/*
+ * Removing Node means settings the ID to -1.
+ * Those Nodes won't be drawn/used.
+ */
+internal void
+RemoveNodeByLabel(NodesIndex* ni, char* label)
+{
+  for (Node* cursor = (Node*)ni->nodesMemory.memory; cursor < ((Node*)ni->nodesMemory.memory + ni->nodesCount * sizeof(Node)); cursor++)
+  {
+    if (strcmp(label, cursor->label) == 0)
     {
-      NULL;
+      cursor->id = (NodeID)-1;
     }
   }
 }

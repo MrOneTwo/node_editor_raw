@@ -32,6 +32,6 @@ typedef uint64_t uint64;
 typedef float real32;
 typedef double real64;
 
-typedef uint32_t NodeID;
+typedef int32_t NodeID;
 
 #endif  // BASE_H
