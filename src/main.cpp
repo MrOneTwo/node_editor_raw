@@ -389,7 +389,7 @@ main(int argc, char *argv[])
   camera.pos[0] = 0.00f;
   camera.pos[1] = 0.00f;
   camera.pos[2] = 0.30f;
-  camera.yaw = M_PI/2.0f;
+  camera.yaw = (float)(M_PI/2.0f);
   camera.pitch = 0.0f;
   camera.roll = 0.0f;
   mat4 view = {};

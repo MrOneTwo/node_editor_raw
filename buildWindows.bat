@@ -7,7 +7,7 @@ set platform=x64
 
 if "%1"=="x86" set platform=x86
 
-set warnFlags=/FC
+set warnFlags=/W3 /WX /wd4201 /FC
 set includeFlags=/I..\SDL-mirror\include /I..\glew\include /I..\src\dirent_win
 set libsFlags=..\SDL-mirror\VisualC\x64\Release\SDL2.lib ..\glew\lib\Release\x64\glew32.lib opengl32.lib
 
@@ -19,7 +19,7 @@ rem /MTd whether a lib is static or dll and if production or debug.
 if "%1"=="debug" (
   rem Fill me in.
 ) else (
-  cl ..\src\main.cpp /Zi /MT %warnFlags% %includeFlags% /link %libsFlags%
+  cl ..\src\main.cpp -nologo /MT /GR- /EHsc /EHa- /Oi /Z7 /Fmmfile.map %warnFlags% %includeFlags% /link %libsFlags%
   copy /Y ..\SDL-mirror\VisualC\x64\Release\SDL2.dll .
   copy /Y ..\glew\bin\Release\x64\glew32.dll .
 )
