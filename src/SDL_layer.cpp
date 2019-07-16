@@ -41,7 +41,6 @@ DEBUGReadEntireFile(char* fileName)
 		  }
 		  else {
 		  	// TODO(michalc): handle this
-
 		  }
 	  }
 	  else {
@@ -49,8 +48,11 @@ DEBUGReadEntireFile(char* fileName)
 	  }
   }
   else {
-    SDL_Log("Failed DEBUGReadEntireFile(): %s", fileName);
     // TODO(mc): handle this case.
+  }
+
+  if (result == 0) {
+	  SDL_Log("Failed DEBUGReadEntireFile(): %s", fileName);
   }
   SDL_RWclose(file);
   return result;
