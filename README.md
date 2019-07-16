@@ -11,8 +11,7 @@ Node editor UX exploration. By *raw* I mean that it is basically an OpenGL app w
 
 ## Current state
 
-17-07-2019 - working on a better architecture where platform layer is separate from the program itself.
-At the moment I'm working on implementing the basic IO functions the way Handmade Hero does it.
+21-07-2019 - The code from main.cpp needs to be migrated into node_editor.cpp.
 
 ## Dependencies
 

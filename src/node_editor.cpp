@@ -1,11 +1,12 @@
 #include "node_editor.h"
 #include "base.h"
 
+#include "entities.cpp"
+
 #include <GL/glew.h>
 #include "cglm/cglm.h"
 
-#include "entities.cpp"
-
+#include <cstring>
 
 #define CUSTOM_3D_SPACE_MAX_X   1000.0f
 #define CUSTOM_3D_SPACE_MAX_Y   1000.0f
@@ -27,6 +28,93 @@ typedef struct Camera {
   float roll;
   float pitch;
 } Camera;
+
+typedef struct MemoryBlock {
+  uint64 size;
+  bool32 valid;
+  void* head;
+  void* tail;
+} MemoryBlock;
+
+typedef struct NodesIndex {
+  // TODO(michalc): should this be a MemoryBlock?
+  MemoryBlock nodesMemory;
+  uint32 nodesCount;
+} NodesIndex;
+
+
+internal void
+InitMemoryBlock(Memory* memory, MemoryBlock* mb, uint64 offset, uint64 size)
+{
+  Assert(size < memory->size);
+
+  mb->head = (uint8*)memory->memory + offset;
+  mb->tail = mb->head;
+  mb->size = size;
+  mb->valid = true;
+}
+
+internal void
+SaveNode(NodesIndex* ni, Node* n)
+{
+  memcpy((Node*)ni->nodesMemory.tail + ni->nodesCount * sizeof(Node), n, sizeof(Node));
+  ni->nodesCount++;
+}
+
+internal void
+AddNode(NodesIndex* ni, char* label, NodeID id, float x, float y, Mesh mesh)
+{
+  Node node = {};
+
+  strncpy_s(node.label, ArrayCount(node.label), label, strlen(label));
+  node.id = id;
+  node.x = x;
+  node.y = y;
+  node.mesh = mesh;
+
+  // TODO(michalc): what if we reached the limit? Then we have to look for a spot where ID == -1
+
+  if (ni->nodesCount * sizeof(Node) < ni->nodesMemory.size)
+  {
+    SaveNode(ni, &node);
+  }
+}
+
+// TODO(michalc); probably labels should be in a separate index since for better nodes finding (more performant)
+internal Node*
+FindNodeByLabel(NodesIndex* ni, char* label)
+{
+  for (Node* cursor = (Node*)ni->nodesMemory.head; cursor < ((Node*)ni->nodesMemory.head + ni->nodesCount * sizeof(Node)); cursor++)
+  {
+    if (strcmp(label, cursor->label) == 0)
+    {
+      return cursor;
+    }
+  }
+  return NULL;
+}
+
+/*
+ * Removing Node means settings the ID to -1.
+ * Those Nodes won't be drawn/used.
+ */
+internal void
+RemoveNodeByLabel(NodesIndex* ni, char* label)
+{
+  for (Node* cursor = (Node*)ni->nodesMemory.head; cursor < ((Node*)ni->nodesMemory.head + ni->nodesCount * sizeof(Node)); cursor++)
+  {
+    if (strcmp(label, cursor->label) == 0)
+    {
+      cursor->id = (NodeID)-1;
+    }
+  }
+}
+
+internal Node*
+FindNodeByID()
+{
+
+}
 
 global_variable GLAtom glAtom = {};
 global_variable Camera camera = {};
@@ -69,5 +157,7 @@ GLint indices[] = {
 
 void UpdateAndRender(WindowParams* win, Memory* memory, Input* input)
 {
-  
+  MemoryBlock nodesMemory = {};
+
+  InitMemoryBlock(memory, &nodesMemory, 0, Megabytes(4));
 }

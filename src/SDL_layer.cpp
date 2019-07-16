@@ -97,11 +97,6 @@ DEBUGFreeFileMemory(void* memory)
 int
 main(int argc, char *argv[])
 {
-	uint64_t size = 0;
-	void* ptr = DEBUGReadEntireFile("..\\README.md", &size);
-	DEBUGWriteEntireFile("test.txt", ptr, size);
-	DEBUGFreeFileMemory(ptr);
-
   SDL_Window* window = NULL;
   SDL_GLContext glContext = {};
 
@@ -176,7 +171,7 @@ main(int argc, char *argv[])
   SDL_GetMouseState(&input.mouseX, &input.mouseY);
 
   Memory mem = {};
-  mem.size = 2 * 1024 * 1024;
+  mem.size = 8 * 1024 * 1024;
   mem.memory = malloc(mem.size);
 
   SDL_Event event;
