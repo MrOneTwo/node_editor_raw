@@ -27,6 +27,14 @@ typedef struct Input {
   float mouseSensitivity;
 } Input;
 
+
+/*
+ * Function declarations that are implemented by the platform layer.
+ */
+
+void* DEBUGReadEntireFile(char* fileName);
+//internal void DEBUGWriteEntireFile();
+
 void UpdateAndRender(WindowParams* win, Memory* memory, Input* input); 
 
 #endif

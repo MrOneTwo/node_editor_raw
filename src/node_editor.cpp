@@ -69,5 +69,5 @@ GLint indices[] = {
 
 void UpdateAndRender(WindowParams* win, Memory* memory, Input* input)
 {
-
+  
 }

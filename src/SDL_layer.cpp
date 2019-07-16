@@ -24,6 +24,37 @@ GetDisplayInformation()
           mode.refresh_rate);
 }
 
+void*
+DEBUGReadEntireFile(char* fileName)
+{
+	void* result = 0;
+
+  SDL_RWops* file = SDL_RWFromFile(fileName, "rb");
+  if (file) {
+	  uint64_t fileSize = SDL_RWsize(file);
+
+	  if (fileSize) {
+		  void* fileData = malloc(fileSize);
+		  SDL_RWread(file, fileData, 1, fileSize);
+		  result = fileData;
+	  }
+	  else {
+	  	// TODO(michalc): handle this
+	  }
+  }
+  else {
+    SDL_Log("Failed DEBUGReadEntireFile(): %s", fileName);
+    // TODO(mc): handle this case.
+  }
+
+  return result;
+}
+
+void
+DEBUGWriteEntireFile(char* fileName, void* data, uint32_t size)
+{
+}
+
 int
 main(int argc, char *argv[])
 {

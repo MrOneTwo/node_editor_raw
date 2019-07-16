@@ -6,7 +6,12 @@
 #define Gigabytes(value)    (Megabytes(value)*1024)
 
 #define ArrayCount(array) (sizeof(array)/sizeof((array)[0]))
+
+#if NODE_EDITOR_CAREFUL
 #define Assert(Expression) if(!(Expression)) {*(int*)0 = 0;}
+#else
+#define Assert(Expression)
+#endif
 
 #define UNUSED(a) (void)a
 #define MIN(a,b) ((a) < (b) ? (a) : (b))

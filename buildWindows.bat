@@ -20,7 +20,7 @@ if "%1"=="debug" (
   rem Fill me in.
 ) else (
   rem cl ..\src\main.cpp -nologo /MT /GR- /EHsc /EHa- /Oi /Z7 /Fmmfile.map %warnFlags% %includeFlags% /link %libsFlags%
-  cl ..\src\SDL_layer.cpp ..\src\node_editor.cpp -nologo /MT /GR- /EHsc /EHa- /Oi /Z7 /Fmmfile.map %warnFlags% %includeFlags% /link %libsFlags% /OUT:NodeEditor.exe
+  cl ..\src\SDL_layer.cpp ..\src\node_editor.cpp -nologo /MT /GR- /EHsc /EHa- /Oi /Z7 /Fmmfile.map /DNODE_EDITOR_CAREFUL=1 %warnFlags% %includeFlags% /link %libsFlags% /OUT:NodeEditor.exe
   copy /Y ..\SDL-mirror\VisualC\x64\Release\SDL2.dll .
   copy /Y ..\glew\bin\Release\x64\glew32.dll .
 )
