@@ -55,6 +55,12 @@ DEBUGWriteEntireFile(char* fileName, void* data, uint32_t size)
 {
 }
 
+void
+DEBUGFreeFileMemory(void* memory)
+{
+}
+
+
 int
 main(int argc, char *argv[])
 {

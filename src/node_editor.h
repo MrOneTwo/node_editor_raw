@@ -33,7 +33,8 @@ typedef struct Input {
  */
 
 void* DEBUGReadEntireFile(char* fileName);
-//internal void DEBUGWriteEntireFile();
+void DEBUGWriteEntireFile(char* fileName, void* data, uint32_t size);
+void DEBUGFreeFileMemory(void* memory);
 
 void UpdateAndRender(WindowParams* win, Memory* memory, Input* input); 
 
