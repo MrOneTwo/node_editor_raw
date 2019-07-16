@@ -23,7 +23,7 @@ LoadEntireFile(char* fileName)
  * Reads the whole file and saves it into the transient memory.
  */
 internal void*
-LoadEntireFileToMemory(char* fileName, AssetTable* assetTable, uint32* size)
+LoadEntireFileToMemory(char* fileName, AssetTable* assetTable, uint64* size)
 {
   // TODO(mc): probably should be SDL_AllocRW
   // TODO(mc): should it be (void*)

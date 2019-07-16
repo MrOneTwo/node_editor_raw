@@ -68,7 +68,7 @@ AddNode(NodesIndex* ni, char* label, NodeID id, float x, float y, Mesh mesh)
 {
   Node node = {};
 
-  strncpy(node.label, label, strlen(label));
+  strncpy_s(node.label, ArrayCount(node.label), label, strlen(label));
   node.id = id;
   node.x = x;
   node.y = y;
