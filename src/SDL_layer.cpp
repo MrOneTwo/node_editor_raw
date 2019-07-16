@@ -4,7 +4,9 @@
 
 #include <GL/glew.h>
 
-#include <stdlib.h>
+#include <stdlib.h>  // EXIT_SUCCESS, EXIT_FAILURE
+
+#include "node_editor.h"
 
 #define INIT_WINDOW_WIDTH    1200
 #define INIT_WINDOW_HEIGHT   900
@@ -89,6 +91,19 @@ main(int argc, char *argv[])
     glewInit();
   }
 
+  WindowParams win = {};
+  win.width = INIT_WINDOW_WIDTH;
+  win.height = INIT_WINDOW_HEIGHT;
+  SDL_GetWindowSize(window, &(win.width), &(win.height));
+
+  Input inputPrev = {};
+  Input input = {};
+  SDL_GetMouseState(&input.mouseX, &input.mouseY);
+
+  Memory mem = {};
+  mem.size = 2 * 1024 * 1024;
+  mem.memory = malloc(mem.size);
+
   SDL_Event event;
 
   while (true) {
@@ -103,6 +118,16 @@ main(int argc, char *argv[])
         } break;
 
         case SDL_WINDOWEVENT: {
+        	switch (event.window.event)
+        	{
+        		case SDL_WINDOWEVENT_RESIZED: {
+	            SDL_GetWindowSize(window, &(win.width), &(win.height));
+        		}
+        		case SDL_WINDOWEVENT_SIZE_CHANGED: {
+	            SDL_GetWindowSize(window, &(win.width), &(win.height));
+        		}
+        		default: break;
+        	}
         } break;
 
         case SDL_KEYDOWN: {
@@ -116,16 +141,20 @@ main(int argc, char *argv[])
         } break;  // SDL_KEYDOWN
 
         case SDL_MOUSEMOTION: {
+	        SDL_GetMouseState(&input.mouseX, &input.mouseY);
         } break;
 
         case SDL_MOUSEBUTTONDOWN: {
           switch (event.button.button)
           {
             case SDL_BUTTON_LEFT: {
+              input.lmbState = true;
             } break;
             case SDL_BUTTON_MIDDLE: {
+              input.mmbState = true;
             } break;
             case SDL_BUTTON_RIGHT: {
+              input.rmbState = true;
             } break;
             default: break;
           }
@@ -135,10 +164,13 @@ main(int argc, char *argv[])
           switch (event.button.button)
           {
             case SDL_BUTTON_LEFT: {
+              input.lmbState = false;
             } break;
             case SDL_BUTTON_MIDDLE: {
+              input.mmbState = false;
             } break;
             case SDL_BUTTON_RIGHT: {
+              input.rmbState = false;
             } break;
             default: break;
           }
@@ -151,12 +183,16 @@ main(int argc, char *argv[])
       }  // switch (event.type)
     }  // while(SDL_PollEvent(&event)
 
-    /*
-     * UPDATE AND RENDER
-     */
+    UpdateAndRender(&win, &mem, &input);
+
+    SDL_GL_SwapWindow(window);
+    SDL_Delay(10);
+
+    inputPrev = input;
 
   } // while(true)
 
 EXIT:;
+  SDL_Quit();
   // CLEANUP
 }

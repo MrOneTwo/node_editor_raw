@@ -13,16 +13,6 @@
 
 #define ASSETS_MAX_COUNT 128
 
-typedef struct MemoryBlock {
-  // valid as in allocated and... valid...
-  bool32 valid;
-  uint64 size;
-  void* memory;
-  // cursor points to the end of the used memory + 1. That means it can be used to
-  // write into the memory.
-  void* cursor;
-} MemoryBlock;
-
 typedef struct Memory {
   MemoryBlock transient;
   MemoryBlock persistent;
