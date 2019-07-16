@@ -35,8 +35,14 @@ DEBUGReadEntireFile(char* fileName)
 
 	  if (fileSize) {
 		  void* fileData = malloc(fileSize);
-		  SDL_RWread(file, fileData, 1, fileSize);
-		  result = fileData;
+		  size_t bytesRead = SDL_RWread(file, fileData, 1, fileSize);
+		  if (bytesRead == fileSize) {
+			  result = fileData;
+		  }
+		  else {
+		  	// TODO(michalc): handle this
+
+		  }
 	  }
 	  else {
 	  	// TODO(michalc): handle this
@@ -46,7 +52,7 @@ DEBUGReadEntireFile(char* fileName)
     SDL_Log("Failed DEBUGReadEntireFile(): %s", fileName);
     // TODO(mc): handle this case.
   }
-
+  SDL_RWclose(file);
   return result;
 }
 
