@@ -32,8 +32,8 @@ typedef struct Input {
  * Function declarations that are implemented by the platform layer.
  */
 
-void* DEBUGReadEntireFile(char* fileName);
-void DEBUGWriteEntireFile(char* fileName, void* data, uint32_t size);
+void* DEBUGReadEntireFile(char* fileName, uint64_t* size);
+uint64_t DEBUGWriteEntireFile(char* fileName, void* data, uint64_t size);
 void DEBUGFreeFileMemory(void* memory);
 
 void UpdateAndRender(WindowParams* win, Memory* memory, Input* input); 

@@ -6,6 +6,7 @@
 
 #include <stdlib.h>  // EXIT_SUCCESS, EXIT_FAILURE
 
+#include "base.h"
 #include "node_editor.h"
 
 #define INIT_WINDOW_WIDTH    1200
@@ -25,15 +26,18 @@ GetDisplayInformation()
 }
 
 void*
-DEBUGReadEntireFile(char* fileName)
+DEBUGReadEntireFile(char* fileName, uint64_t* size)
 {
+	Assert(fileName);
+
 	void* result = 0;
 
   SDL_RWops* file = SDL_RWFromFile(fileName, "rb");
   if (file) {
 	  uint64_t fileSize = SDL_RWsize(file);
 
-	  if (fileSize) {
+	  if (fileSize > 0) {
+	  	*size = fileSize;
 		  void* fileData = malloc(fileSize);
 		  size_t bytesRead = SDL_RWread(file, fileData, 1, fileSize);
 		  if (bytesRead == fileSize) {
@@ -58,20 +62,46 @@ DEBUGReadEntireFile(char* fileName)
   return result;
 }
 
-void
-DEBUGWriteEntireFile(char* fileName, void* data, uint32_t size)
+uint64_t
+DEBUGWriteEntireFile(char* fileName, void* data, uint64_t size)
 {
+	Assert(fileName);
+	Assert(data);
+	Assert(size > 0);
+
+	size_t result = 0;
+
+  SDL_RWops* file = SDL_RWFromFile(fileName, "wb");
+  if (file) {
+	  size_t bytesWritten = SDL_RWwrite(file, data, 1, size);
+	  result = bytesWritten;
+  }
+  else {
+	  SDL_Log("File %s not found", fileName);
+  }
+
+  if (result == 0) {
+	  SDL_Log("Failed DEBUGWriteEntireFile(): %s", fileName);
+  }
+  SDL_RWclose(file);
+  return (uint64_t)result;
 }
 
 void
 DEBUGFreeFileMemory(void* memory)
 {
+	free(memory);
 }
 
 
 int
 main(int argc, char *argv[])
 {
+	uint64_t size = 0;
+	void* ptr = DEBUGReadEntireFile("..\\README.md", &size);
+	DEBUGWriteEntireFile("test.txt", ptr, size);
+	DEBUGFreeFileMemory(ptr);
+
   SDL_Window* window = NULL;
   SDL_GLContext glContext = {};
 
