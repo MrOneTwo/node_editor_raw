@@ -20,6 +20,7 @@ if "%1"=="debug" (
   rem Fill me in.
 ) else (
   cl ..\src\main.cpp -nologo /MT /GR- /EHsc /EHa- /Oi /Z7 /Fmmfile.map %warnFlags% %includeFlags% /link %libsFlags%
+  cl ..\src\SDLLayer.cpp -nologo /MT /GR- /EHsc /EHa- /Oi /Z7 /Fmmfile.map %warnFlags% %includeFlags% /link %libsFlags%
   copy /Y ..\SDL-mirror\VisualC\x64\Release\SDL2.dll .
   copy /Y ..\glew\bin\Release\x64\glew32.dll .
 )
